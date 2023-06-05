@@ -3,40 +3,29 @@ from TuringMachine import TuringMachine
 from TuringMachine.TokenWorker import TokenWorker
 import json
 
-
-def selectKey(tokens:list, keys:list):
+#Função que busca os tokens para retorno
+def GetKeyForReturn(tokens:list, keys:list):
 
   keys.reverse()
   tokens.reverse()
-  
-  
-  if None in keys: 
-    keys.remove(None)
-  
-  if None in tokens: 
-    tokens.remove(None)
 
-  __obj = None
   __verb = None
-
-  for index, key in enumerate(tokens):
-    if key == '__obj__':
-      __obj = keys[index]
-      break
+  __age = None
+  __suj = None
   
-  for index, key in enumerate(tokens):
-    if key == '__verb__':
-      __verb = keys[index]
-      break
+  #Atribui tokens para nossos retornos
+  __verb = next((keys[index] for index, key in enumerate(tokens) if key == '__verb__'), None)
+  __age = next((keys[index] for index, key in enumerate(tokens) if key == '__age__'), None)
+  __suj = next((keys[index] for index, key in enumerate(tokens) if key == '__suj__'), None)
 
-  return (__verb, __obj)
+  return ('F(intenção) = ' + __verb, 'F(agente) = ' + __age, 'F(sujeito) = ' + __suj)
 
-
+#Resgata dicionário de palavras
 with open('words.json', encoding="latin-1") as json_file: 
   dicionary = json.loads(json_file.read())
-  print(dicionary)
 
-input_teste = [
+#Frases para teste do autômato
+franses = [
    'A comida foi feita pela mamãe',
    'A casa foi limpa pela empregada',
    'A bola foi chutada pelo menino',
@@ -52,20 +41,28 @@ input_teste = [
    'O entrevistador perguntou para o entrevistado'
 ]
 
-tkWorker = TokenWorker(dicionary)
-tMachine = TuringMachine()
-tMachine.automatons['PassiveVoice'] = passive_voice_recognize.PassiveVoiceRecognize()
+#Adicionando dicionário a Máquina de Turing
+tokenManager = TokenWorker(dicionary)
+tm = TuringMachine()
+#Cria autômato e estancia de acordo com o arquivo "passive_voice_recognize.py"
+tm.automatons['PassiveVoice'] = passive_voice_recognize.PassiveVoiceRecognize()
 
-for frase in input_teste:
+#Laço para teste de cada frase
+for frase in franses:
   # importar o dicionario de palavras
-  tkWorker = TokenWorker(dicionary)
+  tokenManager = TokenWorker(dicionary)
 
-  tMachine.coil = []
-  tMachine.coil = tkWorker.GenerateTokensWithPhrase(frase) 
-  tMachine.pointer = 1
-  tMachine.run('PassiveVoice')
-  if tMachine.automatons['PassiveVoice'].isFinalState:
+  #Inicializa a Máquina de Turing
+  tm.coil = []
+  tm.coil = tokenManager.GenerateTokensWithPhrase(frase) 
+  tm.pointer = 1
+
+  #Executa
+  tm.run('PassiveVoice')
+
+  #Mostra Resultados
+  if tm.automatons['PassiveVoice'].isFinalState:
     # TODO: ProccessToken(frase)
-    print(selectKey(tkWorker.tokenslist, tkWorker.objectslist))
+    print(GetKeyForReturn(tokenManager.tokenslist, tokenManager.objectslist))
   else:
     print('Não entendi, poderia repetir?')
